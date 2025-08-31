@@ -36,7 +36,7 @@ const HeaderSection = () => {
 
   const destinations = [
     { name: "Israel", description: "High-demand opportunities in construction & agriculture" },
-    { name: "GCC Countries", description: "Premium positions in hospitality & technical fields" },
+    { name: "Gulf Countries", description: "Premium positions in hospitality & technical fields" },
     { name: "Europe", description: "Skilled migration programs with pathway to residency" }
   ];
 

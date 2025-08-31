@@ -56,7 +56,7 @@ const HeroSection = ({ onVideoOpen }: HeroSectionProps) => {
           transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
           viewport={{ once: true }}
         >
-          Government-certified training, industry-tested skills and full placement support for Israel, GCC & Europe.
+          Government-certified training, industry-tested skills and full placement support for Israel, Gulf & Europe.
         </motion.p>
 
         <motion.div 
