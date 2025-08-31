@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { motion } from "framer-motion";
 import { Clock, Plane } from "lucide-react";
 import { useState, useEffect } from "react";
-import WorldMapSVG from "@/assets/worldMaps/world-map-1.svg?react";
 
 const DestinationHighlightsSection = () => {
   const [hoveredDestination, setHoveredDestination] = useState<string | null>(null);
@@ -140,13 +139,11 @@ const DestinationHighlightsSection = () => {
                 
                 {/* Custom World Map SVG as background */}
                 <g className="world-map-background" aria-hidden="true">
-                  <WorldMapSVG 
+                  <image
+                    href="/src/assets/worldMaps/world-map-1.svg"
                     className="w-full h-full opacity-80"
                     style={{
-                      filter: "brightness(0.8) contrast(1.1)",
-                      fill: "hsl(var(--muted) / 0.4)",
-                      stroke: "hsl(var(--border))",
-                      strokeWidth: "0.5"
+                      filter: "brightness(0.8) contrast(1.1)"
                     }}
                     width="1500" 
                     height="700" 
