@@ -238,9 +238,9 @@ const FooterSection = () => {
                   <a href="#" className="text-primary-foreground/60 hover:text-secondary transition-colors duration-300">
                     Terms of Service
                   </a>
-                  <a href="#" className="text-primary-foreground/60 hover:text-secondary transition-colors duration-300">
+                  {/* <a href="#" className="text-primary-foreground/60 hover:text-secondary transition-colors duration-300">
                     Cookie Policy
-                  </a>
+                  </a> */}
                   <a href="#" className="text-primary-foreground/60 hover:text-secondary transition-colors duration-300">
                     Sitemap
                   </a>
