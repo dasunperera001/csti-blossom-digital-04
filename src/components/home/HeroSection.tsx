@@ -1,19 +1,65 @@
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, useInView, useMotionValue, useSpring } from "framer-motion";
 import { ArrowRight, Play, Users, TrendingUp, Globe, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import heroVideo from "@/assets/hero-bg-video.mp4";
 
 interface HeroSectionProps {
   onVideoOpen: () => void;
 }
 
+// Counter animation component
+const AnimatedCounter = ({ 
+  target, 
+  suffix = "", 
+  duration = 2000 
+}: { 
+  target: number; 
+  suffix?: string; 
+  duration?: number; 
+}) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  useEffect(() => {
+    if (isInView) {
+      let startTime: number;
+      let animationFrame: number;
+
+      const animate = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        
+        // Easing function for smooth animation
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        setCount(Math.floor(target * easeOut));
+
+        if (progress < 1) {
+          animationFrame = requestAnimationFrame(animate);
+        } else {
+          setCount(target);
+        }
+      };
+
+      animationFrame = requestAnimationFrame(animate);
+      return () => cancelAnimationFrame(animationFrame);
+    }
+  }, [isInView, target, duration]);
+
+  return (
+    <span ref={ref} className="text-4xl font-bold text-secondary">
+      {count.toLocaleString()}{suffix}
+    </span>
+  );
+};
+
 const HeroSection = ({ onVideoOpen }: HeroSectionProps) => {
   const stats = [
-    { icon: Users, value: "12,000+", label: "Candidates Trained" },
-    { icon: TrendingUp, value: "94%", label: "Placement Rate" },
-    { icon: Globe, value: "15+", label: "Partner Countries" },
-    { icon: Clock, value: "45 Days", label: "Avg Deployment Time" }
+    { icon: Users, value: "12,000+", numericValue: 12000, suffix: "+", label: "Candidates Trained" },
+    { icon: TrendingUp, value: "94%", numericValue: 94, suffix: "%", label: "Placement Rate" },
+    { icon: Globe, value: "15+", numericValue: 15, suffix: "+", label: "Partner Countries" },
+    { icon: Clock, value: "45 Days", numericValue: 45, suffix: "", label: "Avg Deployment Time" }
   ];
 
   return (
@@ -94,7 +140,7 @@ const HeroSection = ({ onVideoOpen }: HeroSectionProps) => {
         </motion.div>
 
         <motion.div 
-          className="grid grid-cols-2 pb-12 md:grid-cols-4 gap-8 text-primary-foreground/80"
+          className="grid grid-cols-2 pt-12 md:pt-4 pb-12 md:grid-cols-4 gap-8 text-primary-foreground/80"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 1.0, ease: "easeOut" }}
@@ -108,11 +154,18 @@ const HeroSection = ({ onVideoOpen }: HeroSectionProps) => {
                 className="text-center"
                 initial={{ opacity: 0, scale: 0.8 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 1.2 + index * 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.5, delay: 0.2 + index * 0.1, ease: "easeOut" }}
                 viewport={{ once: true }}
               >
                 <Icon className="h-8 w-8 mx-auto mb-2 text-secondary" />
-                <div className="text-4xl font-bold text-secondary">{stat.value}</div>
+                <div>
+                  <AnimatedCounter 
+                    target={stat.numericValue} 
+                    suffix={stat.suffix}
+                    duration={2000 + index * 200} // Stagger the animation duration
+                  />
+                  {stat.label === "Avg Deployment Time" && <span className="text-4xl font-bold text-secondary"> Days</span>}
+                </div>
                 <div className="text-sm">{stat.label}</div>
               </motion.div>
             );
