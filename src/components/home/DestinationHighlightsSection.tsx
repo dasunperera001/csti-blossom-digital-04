@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { Clock, Plane } from "lucide-react";
+import { Clock, Plane, MapPin } from "lucide-react";
 import { useState, useEffect } from "react";
 import WorldMapSVG from "@/assets/worldMaps/world-map-1.svg?react";
 
@@ -18,6 +18,7 @@ const DestinationHighlightsSection = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
+  // Desktop coordinates (original)
   const destinations = [
     {
       name: "Israel",
@@ -54,8 +55,29 @@ const DestinationHighlightsSection = () => {
     }
   ];
 
-  // Sri Lanka coordinates (origin)
+  // Mobile-optimized coordinates (focused on Asia-Europe region)
+  const mobileDestinations = [
+    {
+      ...destinations[0],
+      coordinates: { x:370, y: 300 },
+      labelOffset: { x: 0, y: -25 }
+    },
+    {
+      ...destinations[1],
+      coordinates: { x: 500, y: 370 },
+      labelOffset: { x: 0, y: -25 }
+    },
+    {
+      ...destinations[2],
+      coordinates: { x: 150, y: 120 },
+      labelOffset: { x: 0, y: 30 }
+    }
+  ];
+
+  // Desktop Sri Lanka coordinates
   const sriLankaCoords = { x: 1080, y: 370 };
+  // Mobile Sri Lanka coordinates  
+  const mobileSriLankaCoords = { x: 755, y: 540 };
 
   // Generate curved path between two points
   const generateCurvedPath = (start: {x: number, y: number}, end: {x: number, y: number}) => {
@@ -80,9 +102,230 @@ const DestinationHighlightsSection = () => {
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const straightDistance = Math.sqrt(dx * dx + dy * dy);
-    // Approximate curved path length (about 1.2x straight distance for our curve)
     return straightDistance * 1.2;
   };
+
+  // Mobile-specific simplified map component
+  const MobileMapSection = () => (
+    <motion.div
+      className="mb-12 md:hidden"
+      initial={{ opacity: 0, scale: 0.95 }}
+      whileInView={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.8, delay: 0.4 }}
+      viewport={{ once: true }}
+    >
+      <div className="bg-card rounded-2xl overflow-hidden">
+        <div className="aspect-[4/3] h-[50vh] relative">
+          <svg
+            viewBox="0 0 1500 700"
+            className="w-full h-full"
+            role="img"
+            aria-labelledby="mobile-map-title"
+          >
+            <title id="mobile-map-title">Routes from Sri Lanka to key destinations</title>
+            
+            {/* World Map Background - Scaled and positioned for mobile */}
+            <g className="world-map-background" aria-hidden="true">
+              <g transform="scale(2.0) translate(-700, -100)">
+                <WorldMapSVG 
+                  className="w-full h-full opacity-70"
+                  style={{
+                    filter: "brightness(0.8) contrast(1.1)",
+                    fill: "hsl(var(--muted) / 0.4)",
+                    stroke: "hsl(var(--border))",
+                    strokeWidth: "0.8"
+                  }}
+                  width="1500" 
+                  height="700" 
+                />
+              </g>
+            </g>
+
+            {/* Animated route paths */}
+            {mobileDestinations.map((destination, index) => {
+              const pathData = generateCurvedPath(mobileSriLankaCoords, destination.coordinates);
+              const pathLength = calculatePathLength(mobileSriLankaCoords, destination.coordinates);
+              const dashLength = 15;
+              const gapLength = 10;
+              const totalDashPattern = dashLength + gapLength;
+              
+              return (
+                <g key={destination.slug}>
+                  {!reducedMotion && (
+                    <motion.path
+                      d={pathData}
+                      fill="none"
+                      stroke={destination.color}
+                      strokeWidth="3"
+                      strokeDasharray={`${dashLength} ${gapLength}`}
+                      strokeLinecap="round"
+                      strokeOpacity="0.9"
+                      animate={{
+                        strokeDashoffset: [0, -(totalDashPattern)]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "linear",
+                        delay: index * 0.3
+                      }}
+                    />
+                  )}
+                  
+                  {reducedMotion && (
+                    <path
+                      d={pathData}
+                      fill="none"
+                      stroke={destination.color}
+                      strokeWidth="2"
+                      strokeDasharray="8 4"
+                      strokeLinecap="round"
+                      strokeOpacity="0.7"
+                    />
+                  )}
+                </g>
+              );
+            })}
+
+            {/* Moving planes for mobile */}
+            {!reducedMotion && mobileDestinations.map((destination, index) => {
+              const pathLength = calculatePathLength(mobileSriLankaCoords, destination.coordinates);
+              const speed = 60;
+              const duration = pathLength / speed;
+              
+              return (
+                <motion.g
+                  key={`mobile-plane-${destination.slug}`}
+                  animate={{
+                    x: [
+                      mobileSriLankaCoords.x,
+                      ...Array.from({ length: 9 }, (_, i) => 
+                        getPointOnCurve(mobileSriLankaCoords, destination.coordinates, (i + 1) / 10).x
+                      ),
+                      destination.coordinates.x
+                    ],
+                    y: [
+                      mobileSriLankaCoords.y,
+                      ...Array.from({ length: 9 }, (_, i) => 
+                        getPointOnCurve(mobileSriLankaCoords, destination.coordinates, (i + 1) / 10).y
+                      ),
+                      destination.coordinates.y
+                    ]
+                  }}
+                  transition={{
+                    duration: duration,
+                    repeat: Infinity,
+                    ease: "linear",
+                    delay: index * 1
+                  }}
+                >
+                  <motion.circle
+                    r="2"
+                    fill={destination.color}
+                    animate={{
+                      scale: [1, 1.3, 1],
+                      opacity: [0.8, 1, 0.8]
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  <Plane
+                    size={12}
+                    style={{
+                      transform: "translate(-6px, -6px)",
+                      fill: destination.color
+                    }}
+                  />
+                </motion.g>
+              );
+            })}
+
+            {/* Destination markers */}
+            {mobileDestinations.map((destination, index) => (
+              <g key={`mobile-marker-${destination.slug}`}>
+                <motion.circle
+                  cx={destination.coordinates.x}
+                  cy={destination.coordinates.y}
+                  r="8"
+                  fill={destination.color}
+                  stroke="hsl(var(--background))"
+                  strokeWidth="2"
+                  className="cursor-pointer"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 1 + index * 0.2 }}
+                  whileTap={{ scale: 1.2 }}
+                />
+                
+                <motion.text
+                  x={destination.coordinates.x + destination.labelOffset.x}
+                  y={destination.coordinates.y + destination.labelOffset.y}
+                  textAnchor="middle"
+                  className="text-xs font-semibold fill-current text-foreground"
+                  style={{
+                    filter: "drop-shadow(1px 1px 2px rgba(0,0,0,0.5))",
+                    WebkitTextStroke: "0.5px hsl(var(--background))"
+                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 1.2 + index * 0.2 }}
+                >
+                  {destination.name}
+                </motion.text>
+              </g>
+            ))}
+
+            {/* Sri Lanka origin marker */}
+            <g>
+              <motion.circle
+                cx={mobileSriLankaCoords.x}
+                cy={mobileSriLankaCoords.y}
+                r="10"
+                fill="hsl(var(--primary))"
+                stroke="hsl(var(--background))"
+                strokeWidth="3"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+              />
+              
+              <motion.text
+                x={mobileSriLankaCoords.x}
+                y={mobileSriLankaCoords.y + 25}
+                textAnchor="middle"
+                className="text-xs font-semibold fill-current text-foreground"
+                style={{
+                  filter: "drop-shadow(1px 1px 2px rgba(0,0,0,0.5))",
+                  WebkitTextStroke: "0.5px hsl(var(--background))"
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
+              >
+                Sri Lanka
+              </motion.text>
+            </g>
+          </svg>
+        </div>
+        
+        {/* Mobile legend */}
+        <div className="mt-4 flex flex-wrap gap-3 justify-center">
+          {mobileDestinations.map((destination) => (
+            <div key={destination.slug} className="flex items-center gap-1.5">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: destination.color }}
+              />
+              <span className="text-xs font-medium">{destination.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
 
   return (
     <motion.section 
@@ -120,9 +363,12 @@ const DestinationHighlightsSection = () => {
           </motion.p>
         </motion.div>
         
-        {/* Interactive World Map */}
+        {/* Mobile Map Section */}
+        <MobileMapSection />
+        
+        {/* Desktop Interactive World Map */}
         <motion.div
-          className="mb-16"
+          className="mb-16 hidden md:block"
           initial={{ opacity: 0, scale: 0.95 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.4 }}
@@ -207,8 +453,7 @@ const DestinationHighlightsSection = () => {
                 {/* Smooth airplane animations */}
                 {!reducedMotion && destinations.map((destination, index) => {
                   const pathLength = calculatePathLength(sriLankaCoords, destination.coordinates);
-                  // Calculate consistent speed (pixels per second)
-                  const speed = 50; // pixels per second
+                  const speed = 50;
                   const duration = pathLength / speed;
                   
                   return (
